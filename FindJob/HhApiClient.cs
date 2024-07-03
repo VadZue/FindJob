@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Serialization;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -9,6 +12,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows;
 
 namespace FindJob;
@@ -16,9 +20,16 @@ namespace FindJob;
 internal class HhApiClient
 {
     private readonly HttpClient _client;
+    private readonly JsonSerializerOptions _serializerOptions;
 
     public HhApiClient()
     {
+        _serializerOptions = new()
+        { 
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+        };
+
         var socket = new SocketsHttpHandler
         {
             PooledConnectionIdleTimeout = TimeSpan.FromMinutes(1),
@@ -31,17 +42,34 @@ internal class HhApiClient
         };
     }
 
-    
+    public async Task<HhResponse<Vacansy>?> GetVacancies(VacanciesRequest? request = null)
+    {
+        var values = ParseToQueryValues(request);
+        var url = QueryHelpers.AddQueryString("vacancies", values);
+
+        return await Send<HhResponse<Vacansy>>(new(HttpMethod.Get, url));
+    }
+
+    private readonly static DefaultContractResolver _snakeCase = new() { NamingStrategy = new SnakeCaseNamingStrategy() };
+    private static IEnumerable<KeyValuePair<string, string?>> ParseToQueryValues<T>(T? request)
+    {
+        if (request is null) yield break;
+
+        foreach (var property in typeof(T).GetProperties())
+            yield return new(_snakeCase.GetResolvedPropertyName(property.Name), property.GetValue(request) as string);
+    }
 
     private async Task<TParsed?> Send<TParsed>(HttpRequestMessage request) 
     {
         try
         {
+            request.Headers.TryAddWithoutValidation("HH-User-Agent", "FindJob(pet project) (vadim-zue@lenta.ru)");
+
             using var response = await _client.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-            return JsonSerializer.Deserialize<TParsed>(content);
 
+            var content = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+            return JsonSerializer.Deserialize<TParsed>(content, _serializerOptions);
         }
         catch (Exception ex)
         {
@@ -54,65 +82,132 @@ internal class HhApiClient
 
         return default;
     }
-
-    
 }
 
-public class HhResponse 
+public sealed class VacanciesRequest
 {
-    public Vacansy[] items { get; set; }
-    public int found { get; set; }
-    public int page { get; set; }
-    public int pages { get; set; }
-    public int per_page { get; set; }
-    public string? alternate_url { get; set; }
+    public int Page { get; set; }
+
+    public int PageSize { get; set; }
+
+    public long Salary { get; set; }
+
+    public bool OnlyWithSalary { get; set; }
+
+    public Experience? Experience { get; set; }
+
+    public Employment? Employment { get; set; }
+
+    public Schedule Schedule { get; set; }
+
+    public DateOnly? DateFrom { get; set; }
+
+    public DateOnly? DateTo { get; set; }
+}
+
+public enum Experience : byte
+{
+    noExperience,
+    between1And3,
+    between3And6,
+    moreThan6,
+}
+
+public enum Employment : byte
+{
+    full,
+    part,
+    project,
+    volunteer,
+    probation,
+}
+
+public enum Schedule : byte
+{
+    fullDay,
+    flexible,
+    remote,
+    flyInFlyOut,
+}
+
+public class HhResponse<TItems>
+{
+    public virtual List<TItems> Items { get; set; }
+
+    public int Found { get; set; }
+    
+    public int Page { get; set; }
+    
+    public int Pages { get; set; }
+    
+    public int PerPage { get; set; }
+    
+    public string? AlternateUrl { get; set; }
 }
 
 public class Vacansy
 {
-    public bool? accept_temporary { get; set; }
-    public Address address { get; set; }
-    public bool? archived { get; set; }
-    public Contacts contacts { get; set; }
-    public DateTime created_at { get; set; }
-    public bool has_test { get; set; }
-    public string id { get; set; }
-    public string name { get; set; }
-    public bool? premium { get; set; }
-    public DateTime published_at { get; set; }
-    public bool? response_letter_required { get; set; }
-    public Salary salary { get; set; }
-
-
+    public bool? AcceptTemporary { get; set; }
+    
+    public Address? Address { get; set; }
+    
+    public bool? Archived { get; set; }
+    
+    public Contacts? Contacts { get; set; }
+    
+    public DateTime CreatedAt { get; set; }
+    
+    public bool HasTest { get; set; }
+    
+    public string Id { get; set; }
+    
+    public string Name { get; set; }
+    
+    public bool? Premium { get; set; }
+    
+    public DateTime PublishedAt { get; set; }
+    
+    public bool? ResponseLetterRequired { get; set; }
+    
+    public Salary Salary { get; set; }
 }
 
-
-public class Address 
+[Owned]
+public class Address
 { 
-    public string? building { get; set; }
-    public string? city { get; set; }
-    public string? description { get; set; }
-    public string? id { get; set; }
-    public string? raw { get; set; }
-    public string? street { get; set; }
+    public string? Building { get; set; }
+    
+    public string? City { get; set; }
+    
+    public string? Description { get; set; }
+    
+    public string? Id { get; set; }
+    
+    public string? Raw { get; set; }
+    
+    public string? Street { get; set; }
 }
 
-
+[Owned]
 public class Contacts
 {
-    public bool? call_tracking_enabled { get; set; }
-    public string? email { get; set; }
-    public string? name { get; set; }
-
+    public bool? CallTrackingEnabled { get; set; }
+    
+    public string? Email { get; set; }
+    
+    public string? Name { get; set; }
 }
 
+[Owned]
 public class Salary
 {
-    public string? currency { get; set; }
-    public int? from { get; set; }
-    public bool? gross { get; set; }
-    public int? to { get; set; }
-
+    public string? Currency { get; set; }
+    
+    public int? From { get; set; }
+    
+    public bool? Gross { get; set; }
+    
+    public int? To { get; set; }
 }
 
 
