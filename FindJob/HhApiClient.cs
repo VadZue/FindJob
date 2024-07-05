@@ -1,18 +1,9 @@
 ﻿using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
-using System.Net.Sockets;
-using System.Security.Cryptography.Pkcs;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using System.Web;
 using System.Windows;
 
 namespace FindJob;
@@ -147,6 +138,9 @@ public class HhResponse<TItems>
 
 public class Vacansy
 {
+    [Key]
+    public string Id { get; set; }
+    
     public bool? AcceptTemporary { get; set; }
     
     public Address? Address { get; set; }
@@ -158,8 +152,6 @@ public class Vacansy
     public DateTime CreatedAt { get; set; }
     
     public bool HasTest { get; set; }
-    
-    public string Id { get; set; }
     
     public string Name { get; set; }
     

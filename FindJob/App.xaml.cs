@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
 using System.Windows;
 
 namespace FindJob;
@@ -23,7 +24,8 @@ public partial class App : Application
         {
             services.AddDbContext<Database>(options =>
             {
-                options.UseNpgsql("Host=localhost; Database=Jobs; Username=vagin; Password=12345");
+                const string mySqlConnection = "Server=localhost;Database=JobFinder;Uid=root;Pwd=Ad_lol12345_aj;";
+                options.UseMySql(mySqlConnection, ServerVersion.AutoDetect(mySqlConnection));
             });
         }
         catch (Exception ex)
@@ -35,18 +37,25 @@ public partial class App : Application
 
     public async void OnStartup(object sender, StartupEventArgs e)
     {
+        var windowsSwitcher = new WindowSwitcher(_services);
+        await Migrate(windowsSwitcher.Provider);
+
+        windowsSwitcher.Open<MainWindow>();
+    }
+
+    private static async Task Migrate(IServiceProvider provider)
+    {
         try
         {
-            var provider = _services.BuildServiceProvider();
             var db = provider.GetRequiredService<Database>();
 
-            db.Database.EnsureCreated();
             await db.Database.EnsureCreatedAsync().ConfigureAwait(false);
             await db.Database.MigrateAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            throw;
+            MessageBox.Show(JsonSerializer.Serialize(ex, options: new() { WriteIndented = true }));
+            Environment.Exit(-12);
         }
     }
 }
