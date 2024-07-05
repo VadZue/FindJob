@@ -27,6 +27,7 @@ public partial class App : Application
                 const string mySqlConnection = "Server=localhost;Database=JobFinder;Uid=root;Pwd=Ad_lol12345_aj;";
                 options.UseMySql(mySqlConnection, ServerVersion.AutoDetect(mySqlConnection));
             });
+            services.AddSingleton<HhApiClient>();
         }
         catch (Exception ex)
         {

@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace FindJob;
 
-internal class HhApiClient
+public class HhApiClient
 {
     private readonly HttpClient _client;
     private readonly JsonSerializerOptions _serializerOptions;
@@ -58,7 +58,9 @@ internal class HhApiClient
 
             using var response = await _client.SendAsync(request).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-
+#if DEBUG
+            var str = await response.Content.ReadAsStringAsync();
+#endif
             var content = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             return JsonSerializer.Deserialize<TParsed>(content, _serializerOptions);
         }
@@ -81,7 +83,7 @@ public sealed class VacanciesRequest
 
     public int PageSize { get; set; }
 
-    public long Salary { get; set; }
+    public long? Salary { get; set; }
 
     public bool OnlyWithSalary { get; set; }
 
@@ -89,7 +91,7 @@ public sealed class VacanciesRequest
 
     public Employment? Employment { get; set; }
 
-    public Schedule Schedule { get; set; }
+    public Schedule? Schedule { get; set; }
 
     public DateOnly? DateFrom { get; set; }
 

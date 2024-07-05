@@ -5,8 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FindJob"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MainWindow" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen"
+        Loaded="Window_Loaded">
+    <Grid Background="#FF028B8E">
+
+
+        <Ellipse HorizontalAlignment="Left" Opacity="0.6" Height="156" Margin="-70,0,0,-56" VerticalAlignment="Bottom" Width="163" Fill="#FFBECECE"/>
+        <Ellipse HorizontalAlignment="Right" Opacity="0.6" Height="282" Margin="0,-65,-125,0" VerticalAlignment="Top" Width="346" Fill="#FFBECECE"/>
+        <Image Margin="-191,-48,-125,-79" Source="/pngwing.com.png" Stretch="Fill" Grid.RowSpan="2"/>
+
+        <DataGrid x:Name="VacanciesGrid" Margin="93,56,64,56" />
+        <Label x:Name="l1" Content="Вакансии" HorizontalAlignment="Center" Height="46" VerticalAlignment="Top" Width="138" FontSize="25" Margin="0,-4,0,0" Foreground="White" FontFamily="Gill Sans Ultra Bold"/>
+        <Button x:Name="VacanciesRequestBtn" Content="Создать запрос" HorizontalAlignment="Right" Height="27" VerticalAlignment="Bottom" Width="122" Background="#78DBE2" Click="VacanciesRequestBtn_Click" Margin="0,0,214,10" />
+        <Button Content="Button" HorizontalAlignment="Right" Height="27" Margin="0,0,83,10" VerticalAlignment="Bottom" Width="126" Background="#78DBE2"/>
 
     </Grid>
 </Window>

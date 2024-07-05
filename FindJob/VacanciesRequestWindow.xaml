@@ -1,0 +1,37 @@
+﻿<Window x:Class="FindJob.VacanciesRequestWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FindJob"
+        mc:Ignorable="d"
+        Title="VacanciesRequestWindow" Height="450" Width="350" 
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+    <Grid Background="#FF028B8E" Margin="0,0,-15,0">
+        <Ellipse HorizontalAlignment="Left" Opacity="0.6" Height="156" Margin="-32,0,0,-48" VerticalAlignment="Bottom" Width="163" Fill="#FFBECECE"/>
+        <Ellipse HorizontalAlignment="Left" Opacity="0.6" Height="244" Margin="184,0,0,250" VerticalAlignment="Bottom" Width="261" Fill="#FFBECECE"/>
+
+        <TextBox x:Name="PageTexBox" HorizontalAlignment="Left" Height="31" Margin="48,37,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="148"/>
+        <TextBox x:Name="PageSizeTextBox" HorizontalAlignment="Left" Height="31" Margin="48,73,0,0" VerticalAlignment="Top" Width="148"/>
+        <TextBox x:Name="SalaryTexBox" HorizontalAlignment="Left" Height="31" Margin="48,109,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="148"/>
+        <CheckBox x:Name="OnlyWithSalaryTextBox" HorizontalAlignment="Left" Height="22" Margin="178,153,0,0" VerticalAlignment="Top" Width="26"/>
+        <ComboBox x:Name="ExperienceComboBox" HorizontalAlignment="Left" Height="31" Margin="48,181,0,0" Text="" VerticalAlignment="Top" Width="148"/>
+        <ComboBox x:Name="EmploymentComboBox" HorizontalAlignment="Left" Height="31" Margin="48,218,0,0" Text="" VerticalAlignment="Top" Width="148"/>
+        <ComboBox x:Name="ScheduleComboBox" HorizontalAlignment="Left" Height="31" Margin="48,254,0,0" Text="" VerticalAlignment="Top" Width="148"/>
+        <DatePicker x:Name="DateFromPicer" HorizontalAlignment="Left" Height="31" Margin="48,290,0,0" Text="" VerticalAlignment="Top" Width="148"/>
+        <DatePicker x:Name="DateToPicer" HorizontalAlignment="Left" Height="31" Margin="48,326,0,0"  Text="" VerticalAlignment="Top" Width="148"/>
+        <Label Content="Страницы" HorizontalAlignment="Left" Height="31" Margin="204,37,0,0" VerticalAlignment="Top" Width="68" Foreground="White"/>
+        <Label Content="Размер страницы" HorizontalAlignment="Left" Height="31" Margin="204,73,0,0" VerticalAlignment="Top" Width="107" Foreground="White"/>
+        <Label Content="Зарплата" HorizontalAlignment="Left" Height="31" Margin="204,109,0,0" VerticalAlignment="Top" Width="68" Foreground="White"/>
+        <Label Content="Только с указанной ЗП" HorizontalAlignment="Left" Height="31" Margin="204,144,0,0" VerticalAlignment="Top" Width="136" RenderTransformOrigin="0.347,0.464" Foreground="White"/>
+        <Label  Content="Опыт работы" HorizontalAlignment="Left" Height="31" Margin="204,179,0,0" VerticalAlignment="Top" Width="86" Foreground="White"/>
+        <Label Content="Режим работы" HorizontalAlignment="Left" Height="31" Margin="204,217,0,0" VerticalAlignment="Top" Width="107" Foreground="White"/>
+        <Label Content="Рассписание" HorizontalAlignment="Left" Height="31" Margin="204,252,0,0" VerticalAlignment="Top" Width="80" Foreground="White"/>
+        <Label Content="Начиная с" HorizontalAlignment="Left" Height="31" Margin="204,288,0,0" VerticalAlignment="Top" Width="151" Foreground="White"/>
+        <Label Content="Заканчивается" HorizontalAlignment="Left" Height="31" Margin="204,326,0,0" VerticalAlignment="Top" Width="176" Foreground="White"/>
+        <Button Content="Сделать запрос" HorizontalAlignment="Left" Height="31" Margin="218,369,0,0" Background="#78DBE2" VerticalAlignment="Top" Width="108" Foreground="Black" Click="Button_Click"/>
+        <Button x:Name="BackBtn" Content="Назад" HorizontalAlignment="Left" Height="32" Margin="10,368,0,0" Background="#78DBE2" VerticalAlignment="Top" Width="94" Foreground="Black"/>
+
+    </Grid>
+</Window>
