@@ -24,6 +24,7 @@ public partial class MainWindow : Window
 
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        VacanciesGrid.ItemsSource = await   _db.Vacansies.ToListAsync();
+        var vacancies = await _db.Vacansies.ToListAsync();
+        VacanciesGrid.ItemsSource = vacancies;
     }
 }

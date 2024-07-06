@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Windows;
 
 namespace FindJob;
 
@@ -7,34 +6,76 @@ public class Database(DbContextOptions<Database> options) : DbContext(options)
 {
     public DbSet<Vacansy> Vacansies => Set<Vacansy>();
 
-    private async Task MergeVacancies(IEnumerable<Vacansy> vacansies, CancellationToken token = default)
+    public async Task MergeVacancies(IEnumerable<Vacansy> vacansies, CancellationToken token = default)
     {
         using var tran = await Database.BeginTransactionAsync(token);
 
         try
         {
-            var update = await Vacansies
-                .Where(x => vacansies.Any(y => y.Id == x.Id))
+            var ids = vacansies.Select(x => x.Id).ToList();
+            var finded = await Vacansies
+                .Where(x => ids.Contains(x.Id))
                 .ToListAsync(token);
 
-            var insert = vacansies.Where(x => !update.Exists(u => u.Id == x.Id));
+            foreach(var updateTarget in finded)
+            {
+                var source = vacansies.First(x => x.Id == updateTarget.Id);
+                Update(source, updateTarget);
+                Vacansies.Update(updateTarget);
+            }
 
-            await Vacansies.AddRangeAsync(insert, token);
+            await Vacansies.AddRangeAsync(vacansies.Where(x => !finded.Exists(u => u.Id == x.Id)), token);
             await tran.CommitAsync(token);
+            await SaveChangesAsync(token);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            MessageBox.Show(ex.Message);
             await tran.RollbackAsync(token);
-
-            return;
+            throw;
         }
+    }
+
+    public async Task<IList<TopCity>> GetTopCitiesByVacanyCount(int top = 10)
+    {
+        return await Vacansies
+            .Where(x => x.Address != null && x.Address.City != null)
+            .GroupBy(x => x.Address.City)
+            .OrderByDescending(x => x.Count())
+            .Take(top)
+            .Select(x => new TopCity(x.Key, x.Count()))
+            .ToListAsync();
+    }
+
+    public async Task<double?> GetAvgSalary()
+    {
+        return await Vacansies.Where(x => x.Salary.To != null).AverageAsync(x => x.Salary.To);
+    }
+
+    public BiggestAndLowestSalaryVacancies GetBiggestAndLowestSalary()
+    {
+        var min = Vacansies.MinBy(x => x.Salary.To);
+        var max = Vacansies.MaxBy(x => x.Salary.To);
+
+        return new(max, min);
+    }
+
+    private void Update<T>(T source, T destination)
+    {
+        foreach(var property in typeof(T).GetProperties())
+        {
+            var sourceValue = property.GetValue(source);
+            property.SetValue(destination, sourceValue);
+        }
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Vacansy>()
+            .HasKey(x => x.Id);
     }
 }
 
-public sealed class InsertVacansyResponse
-{
-    public int Inserted { get; set; }
-    
-    public int Updated { get; set; }
-}
+public readonly record struct BiggestAndLowestSalaryVacancies(Vacansy? Biggest, Vacansy? Lowest);
+
+public readonly record struct TopCity(string Name, int VacancyCount);
