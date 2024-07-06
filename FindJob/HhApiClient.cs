@@ -2,8 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Serialization;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows;
 
 namespace FindJob;
@@ -18,8 +21,11 @@ public class HhApiClient
         _serializerOptions = new()
         { 
             PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         };
+
+        _serializerOptions.Converters.Add(new DateTimeNullableParser());
+        _serializerOptions.Converters.Add(new DateTimeParser());
 
         var socket = new SocketsHttpHandler
         {
@@ -180,6 +186,11 @@ public class Address
     public string? Raw { get; set; }
     
     public string? Street { get; set; }
+
+    public override string ToString()
+    {
+        return Raw ?? "";
+    }
 }
 
 [Owned]
@@ -190,6 +201,14 @@ public class Contacts
     public string? Email { get; set; }
     
     public string? Name { get; set; }
+
+    public override string ToString()
+    {
+        return new StringBuilder(2)
+            .AppendIfNotEmpty(Name, "ФИО: ")
+            .AppendIfNotEmpty(Email, "email: ")
+            .ToString();
+    }
 }
 
 [Owned]
@@ -202,8 +221,74 @@ public class Salary
     public bool? Gross { get; set; }
     
     public int? To { get; set; }
+
+    public override string ToString()
+    {
+        return new StringBuilder(2)
+            .AppendIfNotEmpty(From?.ToString(), "от: ")
+            .AppendIfNotEmpty(To?.ToString(), "до: ")
+            .ToString();
+    }
 }
 
+public static class StringBuilderExntension
+{
+    public static StringBuilder AppendIfNotEmpty(this StringBuilder builder, string? targetValue, string? prefix = "")
+    {
+        if (string.IsNullOrWhiteSpace(targetValue))
+            return builder;
+        
+        if (builder.Length > 0)
+            builder.Append(", ");
 
+        if (!string.IsNullOrEmpty(prefix))
+            builder.Append(prefix);
 
+        builder.Append(targetValue);
+        return builder;
+    }
+}
+
+public sealed class DateTimeNullableParser : JsonConverter<DateTime?>
+{
+    public override DateTime? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.String)
+        {
+            throw new NotSupportedException($"not supporting json token type: {reader.TokenType}");
+        }
+
+        return reader.GetString() switch
+        {
+            string dateTimeRaw => DateTime.Parse(dateTimeRaw),
+            _ => null,
+        };
+    }
+
+    public override void Write(Utf8JsonWriter writer, DateTime? value, JsonSerializerOptions options)
+    {
+        if (options.DefaultIgnoreCondition is JsonIgnoreCondition.WhenWritingNull or JsonIgnoreCondition.WhenWritingDefault or JsonIgnoreCondition.Always)
+            return;
+
+        var dateTimeRaw = value?.ToString(DateTimeFormatInfo.InvariantInfo);
+        writer.WriteStringValue(dateTimeRaw);
+    }
+}
+
+public sealed class DateTimeParser : JsonConverter<DateTime>
+{
+    private readonly DateTimeNullableParser _nullableParser = new();
+
+    public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        return _nullableParser.Read(ref reader, typeToConvert, options) switch
+        {
+            DateTime parsed => parsed,
+            _ => throw new ArgumentNullException($"Can not parse null token at: {reader.TokenStartIndex} to {nameof(DateTime)}"),
+        };
+    }
+
+    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+        => _nullableParser.Write(writer, value, options);
+}
 

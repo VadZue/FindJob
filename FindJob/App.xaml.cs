@@ -38,26 +38,26 @@ public partial class App : Application
 
     public async void OnStartup(object sender, StartupEventArgs e)
     {
-        var windowsSwitcher = new WindowSwitcher(_services);
-        await Migrate(windowsSwitcher.Provider);
-
-        windowsSwitcher.Open<MainWindow>();
-    }
-
-    private static async Task Migrate(IServiceProvider provider)
-    {
         try
         {
-            var db = provider.GetRequiredService<Database>();
+            var windowsSwitcher = new WindowSwitcher(_services);
+            await Migrate(windowsSwitcher.Provider);
 
-            await db.Database.EnsureCreatedAsync().ConfigureAwait(false);
-            await db.Database.MigrateAsync().ConfigureAwait(false);
+            windowsSwitcher.Open<MainWindow>();
         }
         catch (Exception ex)
         {
             MessageBox.Show(JsonSerializer.Serialize(ex, options: new() { WriteIndented = true }));
             Environment.Exit(-12);
         }
+    }
+
+    private static async Task Migrate(IServiceProvider provider)
+    {
+        var db = provider.GetRequiredService<Database>();
+
+        await db.Database.EnsureCreatedAsync().ConfigureAwait(false);
+        await db.Database.MigrateAsync().ConfigureAwait(false);
     }
 }
 

@@ -20,8 +20,11 @@ namespace FindJob
     public partial class VacanciesRequestWindow : Window
     {
         HhApiClient _client;
-        public VacanciesRequestWindow(HhApiClient client) 
+        Database _db;
+
+        public VacanciesRequestWindow(HhApiClient client, Database db) 
         {
+            _db = db;
             _client = client;
             InitializeComponent();
             ExperienceComboBox.ItemsSource = GetValues<Experience>();
@@ -39,6 +42,8 @@ namespace FindJob
 
             try
             {
+                var dd = await _db.GetTopCitiesByVacanyCount();
+
                 var request = new VacanciesRequest()
                 {
                     Page = !string.IsNullOrWhiteSpace(PageTexBox.Text) ? int.Parse(PageTexBox.Text) : 0,
@@ -52,7 +57,27 @@ namespace FindJob
                     DateTo = DateToPicer.SelectedDate?.Date == null ? null : DateOnly.FromDateTime(DateToPicer.SelectedDate.Value.Date),
                 };
 
-                var vacancies = await _client.GetVacancies(request);
+                var response = await _client.GetVacancies(request);
+                
+                if(response is null)
+                {
+                    MessageBox.Show("Запрос завешился с ошибкой");
+                    return;
+                }
+
+                MessageBox.Show($"Запрос успешно прошел. Доступно странийц: {response.Pages}", "", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                try
+                {
+                    await _db.MergeVacancies(response.Items);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                MessageBox.Show("Данные успешно сохранены");
             }
             catch (Exception ex)
             {
