@@ -48,12 +48,18 @@ public class HhApiClient
     }
 
     private readonly static DefaultContractResolver _snakeCase = new() { NamingStrategy = new SnakeCaseNamingStrategy() };
-    private static IEnumerable<KeyValuePair<string, string?>> ParseToQueryValues<T>(T? request)
+    private IEnumerable<KeyValuePair<string, string?>> ParseToQueryValues<T>(T? request)
     {
         if (request is null) yield break;
 
         foreach (var property in typeof(T).GetProperties())
-            yield return new(_snakeCase.GetResolvedPropertyName(property.Name), property.GetValue(request) as string);
+        {
+            var value = property.GetValue(request);
+            if (value == null) continue;
+
+            yield return new(_snakeCase.GetResolvedPropertyName(property.Name), JsonSerializer.Serialize(value, _serializerOptions));
+
+        }
     }
 
     private async Task<TParsed?> Send<TParsed>(HttpRequestMessage request) 
@@ -87,7 +93,7 @@ public sealed class VacanciesRequest
 {
     public int Page { get; set; }
 
-    public int PageSize { get; set; }
+    public int PerPage { get; set; }
 
     public long? Salary { get; set; }
 

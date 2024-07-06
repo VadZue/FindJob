@@ -42,12 +42,11 @@ namespace FindJob
 
             try
             {
-                var dd = await _db.GetTopCitiesByVacanyCount();
 
                 var request = new VacanciesRequest()
                 {
                     Page = !string.IsNullOrWhiteSpace(PageTexBox.Text) ? int.Parse(PageTexBox.Text) : 0,
-                    PageSize = !string.IsNullOrWhiteSpace(PageSizeTextBox.Text) ? int.Parse(PageSizeTextBox.Text) : 0,
+                    PerPage = !string.IsNullOrWhiteSpace(PageSizeTextBox.Text) ? int.Parse(PageSizeTextBox.Text) : 0,
                     Salary = !string.IsNullOrWhiteSpace(SalaryTexBox.Text) ? long.Parse(SalaryTexBox.Text) : null,
                     OnlyWithSalary = OnlyWithSalaryTextBox.IsChecked == true,
                     Experience = !string.IsNullOrWhiteSpace(ExperienceComboBox.Text) ? Enum.Parse<Experience>(ExperienceComboBox.Text) : null,
@@ -84,5 +83,11 @@ namespace FindJob
                 MessageBox.Show(ex.Message);
             }
         }
+
+        private void BackBtn_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace FindJob;
 
@@ -24,7 +25,9 @@ public class Database(DbContextOptions<Database> options) : DbContext(options)
                 Vacansies.Update(updateTarget);
             }
 
-            await Vacansies.AddRangeAsync(vacansies.Where(x => !finded.Exists(u => u.Id == x.Id)), token);
+            var add = vacansies.Where(x => !finded.Exists(u => u.Id == x.Id)).ToList();
+
+            Vacansies.AddRange(add);
             await tran.CommitAsync(token);
             await SaveChangesAsync(token);
         }
@@ -58,6 +61,16 @@ public class Database(DbContextOptions<Database> options) : DbContext(options)
 
         return new(max, min);
     }
+    public async Task<BiggestAndLowestSalaryVacancies> GetBiggestAndLowestSalaryAsync()
+    {
+        var min = await Vacansies.MinAsync(x => x.Salary.To);
+        var max = await Vacansies.MaxAsync(x => x.Salary.To);
+        var minVac = await Vacansies.FirstOrDefaultAsync(x => x.Salary.To == min);
+        var maxVac = await Vacansies.FirstOrDefaultAsync(x => x.Salary.To == max);
+        
+        return new(minVac, maxVac);
+    }
+
 
     private void Update<T>(T source, T destination)
     {
